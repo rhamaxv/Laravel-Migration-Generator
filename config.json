@@ -1,0 +1,15 @@
+{
+    "user" : "root",
+    "password" : "",
+    "host" : "127.0.0.1",
+    "port" : 3306,
+    "database" : "name-database",
+    "templates" : {
+        "migration" : "templates/migration.txt",
+        "foreign_key" : "templates/foreign_key.txt"
+    },
+    "exclude_tables" : [
+        "migrations"
+    ],
+    "only_include_tables" : []
+  }
