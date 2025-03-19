@@ -76,15 +76,15 @@ class FieldGenerator:
                     precision = col_type.split('(')[1].split(')')[0].split(',')
                     
             # String Types
+            elif 'varchar' in col_type:
+                field_type = 'varchar'
+                length = col_type.split('(')[1].split(')')[0] if '(' in col_type else '255'
             elif 'char' in col_type:
                 field_type = 'char'
                 if '(' in col_type:
                     length = col_type.split('(')[1].split(')')[0]
-            elif 'varchar' in col_type:
-                field_type = 'string'
-                length = col_type.split('(')[1].split(')')[0] if '(' in col_type else '255'
             elif 'tinytext' in col_type:
-                field_type = 'text'  # Laravel doesn't have specific tinyText
+                field_type = 'text' 
             elif 'mediumtext' in col_type:
                 field_type = 'mediumText'
             elif 'longtext' in col_type:

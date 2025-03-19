@@ -1,9 +1,9 @@
 {
     "user" : "root",
-    "password" : "",
+    "password" : "rhama.",
     "host" : "127.0.0.1",
     "port" : 3306,
-    "database" : "name-database",
+    "database" : "eschool-7-smkn8malang",
     "templates" : {
         "migration" : "templates/migration.txt",
         "foreign_key" : "templates/foreign_key.txt"
