@@ -1,2 +1,0 @@
-2025-03-14 16:29:04,484 - ERROR - Error generating constraint codes: 'ForeignKeyGenerator' object has no attribute '_process_table_constraints'
-2025-03-14 16:29:04,484 - ERROR - Error generating foreign key constraints: 'ForeignKeyGenerator' object has no attribute '_process_table_constraints'

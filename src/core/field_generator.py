@@ -49,9 +49,16 @@ class FieldGenerator:
             length = None
             precision = None
             
-            # Numeric Types
-            if 'tinyint(1)' in col_type:  # Special case for boolean
+            # Cek enum terlebih dahulu karena paling spesifik
+            if 'enum' in col_type:
+                field_type = 'enum'
+                # Extract enum values: enum('value1','value2') -> ['value1', 'value2']
+                enum_str = col_type.split('(')[1].rstrip(')')
+                length = [val.strip("'").strip('"') for val in enum_str.split(',')]
+            # Cek tinyint(1) untuk boolean
+            elif 'tinyint(1)' in col_type:
                 field_type = 'boolean'
+            # Numeric Types
             elif 'tinyint' in col_type:
                 field_type = 'tinyInteger'
             elif 'smallint' in col_type:
@@ -75,16 +82,23 @@ class FieldGenerator:
                 if '(' in col_type:
                     precision = col_type.split('(')[1].split(')')[0].split(',')
                     
-            # String Types
+        
             elif 'varchar' in col_type:
-                field_type = 'varchar'
-                length = col_type.split('(')[1].split(')')[0] if '(' in col_type else '255'
+                field_type = 'string'
+                if '(' in col_type:
+                    try:
+                        length = col_type.split('(')[1].split(')')[0]
+                        int(length)
+                    except (ValueError, IndexError):
+                        length = '255'
+                else:
+                    length = '255'
             elif 'char' in col_type:
                 field_type = 'char'
                 if '(' in col_type:
                     length = col_type.split('(')[1].split(')')[0]
             elif 'tinytext' in col_type:
-                field_type = 'text' 
+                field_type = 'text'
             elif 'mediumtext' in col_type:
                 field_type = 'mediumText'
             elif 'longtext' in col_type:
@@ -102,10 +116,6 @@ class FieldGenerator:
                     field_type = 'binary'
                 else:
                     field_type = 'binary'
-            elif 'enum' in col_type:
-                field_type = 'enum'
-                enum_str = col_type.split('(')[1].rstrip(')')
-                length = [val.strip("'").strip('"') for val in enum_str.split(',')]
             elif 'set' in col_type:
                 field_type = 'set'
                 set_str = col_type.split('(')[1].rstrip(')')
@@ -149,7 +159,7 @@ class FieldGenerator:
                 field_type = 'string'
                 length = '255'
                 
-            info_logger.debug(f"Parsed column type: {col_type} to {field_type}")
+            info_logger.debug(f"Parsed column type: {col_type} to {field_type}, length: {length}")
             return field_type, length, precision
             
         except Exception as e:
@@ -161,17 +171,12 @@ class FieldGenerator:
             if field_type == 'enum':
                 enum_values = "['" + "', '".join(length) + "']"
                 field_def = f"$table->enum('{name}', {enum_values})"
-            elif field_type == 'set':
-                set_values = "['" + "', '".join(length) + "']"
-                field_def = f"$table->set('{name}', {set_values})"
-            elif field_type in ['string', 'char'] and length:
-                field_def = f"$table->{field_type}('{name}', {length})"
+            elif field_type == 'string' and length:
+                field_def = f"$table->string('{name}', {length})"
+            elif field_type == 'char' and length:
+                field_def = f"$table->char('{name}', {length})"
             elif field_type in ['decimal', 'float', 'double'] and precision:
                 field_def = f"$table->{field_type}('{name}', {precision[0]}, {precision[1]})"
-            elif field_type in ['geometry', 'point', 'lineString', 'polygon', 
-                              'multiPoint', 'multiLineString', 'multiPolygon', 
-                              'geometryCollection']:
-                field_def = f"$table->{field_type}('{name}')"
             else:
                 field_def = f"$table->{field_type}('{name}')"
                 
@@ -190,7 +195,10 @@ class FieldGenerator:
             if default is not None:
                 if default == 'CURRENT_TIMESTAMP':
                     field_def += "->default(DB::raw('CURRENT_TIMESTAMP'))"
-                elif field_type in ['string', 'text']:
+                elif field_type == 'enum':
+                    # Untuk enum, default value harus dalam string
+                    field_def += f"->default('{default}')"
+                elif field_type in ['string', 'text', 'char', 'mediumText', 'longText']:
                     field_def += f"->default('{default}')"
                 else:
                     field_def += f"->default({default})"
